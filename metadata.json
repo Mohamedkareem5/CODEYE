@@ -1,0 +1,5 @@
+{
+  "name": "CODEYE",
+  "description": "AI-powered code review platform that analyzes code for bugs, security vulnerabilities, performance issues, and best practice violations in real time.",
+  "requestFramePermissions": []
+}

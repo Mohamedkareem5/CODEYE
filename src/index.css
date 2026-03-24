@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+  
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-fg: var(--muted-fg);
+  --color-card: var(--card);
+}
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --border: #e5e5e5;
+    --muted: #f5f5f5;
+    --muted-fg: #888888;
+    --card: #ffffff;
+  }
+
+  .dark {
+    --bg: #000000;
+    --fg: #ffffff;
+    --border: #1f1f1f;
+    --muted: #0d0d0d;
+    --muted-fg: #888888;
+    --card: #0d0d0d;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased transition-colors duration-300 relative min-h-screen;
+  }
+  
+  /* CSS Noise/Grain Texture Overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+  code, pre {
+    @apply font-mono;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-fg;
+}
+
+/* Utilities */
+.glass {
+  @apply bg-white/5 dark:bg-black/5 backdrop-blur-md border border-white/10 dark:border-white/10;
+}
+
+/* Hover Animations */
+.hover-invert {
+  @apply transition-all duration-[250ms] ease-in-out;
+}
+.hover-invert:hover {
+  @apply bg-fg text-bg border-fg;
+}
+.hover-invert-none:hover {
+  @apply bg-transparent text-fg border-transparent;
+}
+
+.nav-link {
+  @apply relative inline-block transition-transform duration-[250ms] ease-out;
+}
+.nav-link::after {
+  content: '';
+  @apply absolute left-0 bottom-0 w-full h-[1px] bg-fg origin-left scale-x-0 transition-transform duration-[250ms] ease-out;
+}
+.nav-link:hover::after {
+  @apply scale-x-100;
+}
+
+.footer-link {
+  @apply inline-block transition-transform duration-[250ms] ease-out;
+}
+.footer-link:hover {
+  @apply -translate-y-[2px] text-fg;
+}
+
+.card-tilt {
+  @apply transition-all duration-300 ease-out;
+  transform-style: preserve-3d;
+}
+.card-tilt:hover {
+  @apply border-fg;
+}
+
+/* Page Load Curtain */
+.page-curtain {
+  @apply fixed inset-0 bg-bg z-[10000] pointer-events-none;
+}
+

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Prevent "Cannot set property fetch of #<Window> which has only a getter" errors
+      // from rogue polyfills by adding a no-op setter.
+      try {
+        const desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+        if (desc && !desc.set) {
+          Object.defineProperty(window, 'fetch', {
+            get: desc.get,
+            set: function() { /* silently ignore */ },
+            configurable: true,
+            enumerable: desc.enumerable
+          });
+        }
+      } catch (e) {}
+
+      // Initialize theme to prevent flash
+      try {
+        const savedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    </script>
+    <title>CODEYE - AI Code Review Platform</title>
+    <meta name="description" content="Your Code. Reviewed by Intelligence. AI-powered code review platform that analyzes code for bugs, security vulnerabilities, performance issues, and best practice violations in real time." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx?v=2"></script>
+  </body>
+</html>
+
