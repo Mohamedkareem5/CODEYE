@@ -63,17 +63,18 @@ export function ChartImpact() {
         backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-          gradient.addColorStop(0, "rgba(128, 128, 128, 0.2)");
-          gradient.addColorStop(1, "rgba(128, 128, 128, 0)");
+          gradient.addColorStop(0, "rgba(99, 179, 237, 0.35)");
+          gradient.addColorStop(1, "rgba(99, 179, 237, 0)");
           return gradient;
         },
-        borderColor: "var(--fg)",
-        borderWidth: 2,
-        pointBackgroundColor: "var(--card)",
-        pointBorderColor: "var(--fg)",
+        borderColor: "#63B3ED",
+        borderWidth: 2.5,
+        pointBackgroundColor: "#1a1a2e",
+        pointBorderColor: "#63B3ED",
         pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: "#63B3ED",
         tension: 0.4,
       },
     ],
@@ -98,15 +99,17 @@ export function ChartImpact() {
         min: 50,
         max: 100,
         grid: {
-          color: "var(--border)",
+          color: "rgba(255, 255, 255, 0.08)",
           drawBorder: false,
         },
         ticks: {
-          color: "var(--muted-fg)",
+          color: "rgba(255, 255, 255, 0.5)",
           font: {
-            family: "JetBrains Mono",
+            family: "monospace",
+            size: 12,
           },
         },
+        border: { display: false },
       },
       x: {
         grid: {
@@ -114,11 +117,13 @@ export function ChartImpact() {
           drawBorder: false,
         },
         ticks: {
-          color: "var(--muted-fg)",
+          color: "rgba(255, 255, 255, 0.5)",
           font: {
-            family: "JetBrains Mono",
+            family: "monospace",
+            size: 12,
           },
         },
+        border: { display: false },
       },
     },
     plugins: {
@@ -126,10 +131,10 @@ export function ChartImpact() {
         display: false,
       },
       tooltip: {
-        backgroundColor: "var(--card)",
-        titleColor: "var(--fg)",
-        bodyColor: "var(--fg)",
-        borderColor: "var(--fg)",
+        backgroundColor: "#1e293b",
+        titleColor: "#e2e8f0",
+        bodyColor: "#94a3b8",
+        borderColor: "#334155",
         borderWidth: 1,
         padding: 12,
         displayColors: false,

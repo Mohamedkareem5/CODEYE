@@ -32,8 +32,9 @@ function calculateTotalPrice(items) {
 export function BeforeAfter() {
   const sectionRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showAfter, setShowAfter] = useState(false);
 
@@ -46,7 +47,6 @@ export function BeforeAfter() {
 
   useEffect(() => {
     if (!sectionRef.current) return;
-
     gsap.fromTo(
       sectionRef.current,
       { opacity: 0, y: 40 },
@@ -63,32 +63,43 @@ export function BeforeAfter() {
     );
   }, []);
 
+  const updateSlider = (clientX: number) => {
+    if (!containerRef.current || !overlayRef.current || !sliderRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const percentage = (x / rect.width) * 100;
+    overlayRef.current.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
+    sliderRef.current.style.left = `calc(${percentage}% - 2px)`;
+  };
+
   useEffect(() => {
-    const handleMove = (e: MouseEvent | TouchEvent) => {
-      if (!isDragging || !containerRef.current || isMobile) return;
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      const percentage = (x / rect.width) * 100;
-      setSliderPosition(percentage);
+    if (isMobile) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      updateSlider(e.clientX);
     };
 
-    const handleMouseUp = () => setIsDragging(false);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      updateSlider(e.touches[0].clientX);
+    };
 
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('touchmove', handleMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchend', handleMouseUp);
-    }
+    const handleUp = () => { isDragging.current = false; };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
 
     return () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('touchmove', handleMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchend', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
     };
-  }, [isDragging, isMobile]);
+  }, [isMobile]);
 
   return (
     <section ref={sectionRef} className="py-24 bg-bg">
@@ -103,7 +114,7 @@ export function BeforeAfter() {
         <div className="max-w-4xl mx-auto">
           {isMobile && (
             <div className="flex justify-center mb-6">
-              <button 
+              <button
                 onClick={() => setShowAfter(!showAfter)}
                 className="px-6 py-2 bg-card border border-border text-fg rounded-full font-medium text-sm hover-invert"
               >
@@ -112,11 +123,23 @@ export function BeforeAfter() {
             </div>
           )}
 
-          <div 
+          <div
             ref={containerRef}
             className="relative h-[400px] md:h-[500px] w-full rounded-xl overflow-hidden border border-border bg-card select-none"
+            style={{ cursor: isMobile ? 'default' : 'ew-resize' }}
+            onMouseDown={(e) => {
+              if (isMobile) return;
+              e.preventDefault();
+              isDragging.current = true;
+              updateSlider(e.clientX);
+            }}
+            onTouchStart={(e) => {
+              if (isMobile) return;
+              isDragging.current = true;
+              updateSlider(e.touches[0].clientX);
+            }}
           >
-            {/* Before Code (Base Layer) */}
+            {/* Before Code */}
             <div className={`absolute inset-0 w-full h-full p-6 md:p-8 ${isMobile && showAfter ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
               <div className="text-xs text-muted-fg uppercase tracking-widest mb-4 font-bold">Before</div>
               <pre className="font-mono text-sm md:text-base text-muted-fg overflow-x-auto">
@@ -124,10 +147,11 @@ export function BeforeAfter() {
               </pre>
             </div>
 
-            {/* After Code (Overlay Layer) */}
-            <div 
+            {/* After Code */}
+            <div
+              ref={overlayRef}
               className={`absolute inset-0 h-full bg-card p-6 md:p-8 border-r border-fg ${isMobile ? (showAfter ? 'opacity-100 w-full' : 'opacity-0 w-full') : ''} transition-opacity duration-300`}
-              style={{ clipPath: isMobile ? 'none' : `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
+              style={{ clipPath: isMobile ? 'none' : 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}
             >
               <div className="text-xs text-fg uppercase tracking-widest mb-4 font-bold">After</div>
               <pre className="font-mono text-sm md:text-base text-fg overflow-x-auto">
@@ -137,11 +161,10 @@ export function BeforeAfter() {
 
             {/* Slider Handle */}
             {!isMobile && (
-              <div 
-                className="absolute top-0 bottom-0 w-1 bg-fg cursor-ew-resize z-10"
-                style={{ left: `calc(${sliderPosition}% - 2px)` }}
-                onMouseDown={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onTouchStart={() => setIsDragging(true)}
+              <div
+                ref={sliderRef}
+                className="absolute top-0 bottom-0 w-1 bg-fg z-10 pointer-events-none"
+                style={{ left: 'calc(50% - 2px)' }}
               >
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-fg rounded-full flex items-center justify-center shadow-lg">
                   <div className="flex gap-1">
