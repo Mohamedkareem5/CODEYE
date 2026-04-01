@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      // Prevent "Cannot set property fetch of #<Window> which has only a getter" errors
-      // from rogue polyfills by adding a no-op setter.
+      // Prevent "Cannot set property fetch" and "nativeFetch is not a function" errors
+      // by converting the fetch accessor descriptor into a normal writable data descriptor.
       try {
         const desc = Object.getOwnPropertyDescriptor(window, 'fetch');
-        if (desc && !desc.set) {
+        if (desc && desc.get) {
+          const fetchFunc = desc.get.call(window);
           Object.defineProperty(window, 'fetch', {
-            get: desc.get,
-            set: function() { /* silently ignore */ },
+            value: fetchFunc,
+            writable: true,
             configurable: true,
             enumerable: desc.enumerable
           });

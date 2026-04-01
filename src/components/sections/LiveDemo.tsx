@@ -119,36 +119,55 @@ Return a structured JSON array of review items. Each item must have:
 - title: A short, punchy title for the issue
 - description: Detailed explanation of the issue
 - suggestion: How to fix it (include code snippet if applicable)
-- line: The approximate line number (optional, use null if not applicable)
+- line: The approximate line number (omit if not applicable)`;
 
-Respond ONLY with the raw JSON array, no markdown formatting or other text.`;
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "anthropic-version": "2023-06-01"
+      const { GoogleGenAI, Type } = await import("@google/genai");
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Gemini API key is missing. Please configure it in the settings.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                category: {
+                  type: Type.STRING,
+                  description: "strictly one of 'bug', 'security', 'performance', 'best_practice'",
+                },
+                title: {
+                  type: Type.STRING,
+                  description: "A short, punchy title for the issue",
+                },
+                description: {
+                  type: Type.STRING,
+                  description: "Detailed explanation of the issue",
+                },
+                suggestion: {
+                  type: Type.STRING,
+                  description: "How to fix it (include code snippet if applicable)",
+                },
+                line: {
+                  type: Type.NUMBER,
+                  description: "The approximate line number (omit if not applicable)",
+                },
+              },
+              required: ["category", "title", "description", "suggestion"],
+            },
+          },
         },
-        body: JSON.stringify({
-          model: "claude-3-5-sonnet-20240620",
-          max_tokens: 4000,
-          messages: [
-            { role: "user", content: prompt }
-          ]
-        })
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const resultText = data.content[0].text;
+      const resultText = response.text;
       
       if (resultText) {
-        // Clean up potential markdown formatting if Claude includes it despite instructions
-        const cleanedText = resultText.replace(/```json\n?|\n?```/g, '').trim();
-        const parsedReview = JSON.parse(cleanedText) as ReviewItem[];
+        const parsedReview = JSON.parse(resultText) as ReviewItem[];
         setReview(parsedReview);
         
         // Animate results in
@@ -166,7 +185,7 @@ Respond ONLY with the raw JSON array, no markdown formatting or other text.`;
       }
     } catch (err) {
       console.error("Review error:", err);
-      setError("Failed to analyze code. Please try again later.");
+      setError(err instanceof Error ? err.message : "Failed to analyze code. Please try again later.");
     } finally {
       setIsAnalyzing(false);
     }
